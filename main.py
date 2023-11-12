@@ -7,14 +7,12 @@ from flask import Flask
 from dotenv import load_dotenv
 
 
-load_dotenv()
 
-
-def fetch_coordinates(geocode_api, address):
+def fetch_coordinates(api, address):
     base_url = "https://geocode-maps.yandex.ru/1.x"
     response = requests.get(base_url, params={
         "geocode": address,
-        "apikey": geocode_api,
+        "apikey": api,
         "format": "json",
     })
     response.raise_for_status()
@@ -28,9 +26,9 @@ def fetch_coordinates(geocode_api, address):
     return lat, lon
 
 
-def find_user_location():
+def find_user_location(api):
     location = str(input("Где вы находитесь? "))
-    coords = fetch_coordinates(geocode_api, location)
+    coords = fetch_coordinates(api, location)
     return coords
 
 
@@ -40,8 +38,8 @@ def read_file_locations():
     return json.loads(file_contents)
 
 
-def coffee_and_locations():
-    coords = find_user_location()
+def coffee_and_locations(api):
+    coords = find_user_location(api)
     coffee_shops = read_file_locations()
     coffee_shops_infos = []
     for coffee_shop in coffee_shops:
@@ -59,7 +57,9 @@ def get_closer_location(coffee_shops):
 
 
 def main():
-    start_loc, locations = coffee_and_locations()
+    load_dotenv()
+    geocode_api = os.environ['API_KEY']
+    start_loc, locations = coffee_and_locations(geocode_api)
     more_closer_location = sorted(locations, key=get_closer_location, reverse=False)[:5]
     creating_map(start_loc, more_closer_location)
     run_app()
@@ -90,5 +90,4 @@ def hello_world():
 
 
 if __name__ == "__main__":
-    geocode_api = os.environ['API_KEY']
     main()
